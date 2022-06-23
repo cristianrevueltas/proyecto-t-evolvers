@@ -1,0 +1,85 @@
+version: "3.7"
+
+# Names our services
+services:
+  # Services producer
+  producer:
+    restart: always
+    build: ./producer/.
+    container_name: producer
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./producer:/producer
+    depends_on:
+      - "consumer"
+
+  # Services consumer
+  consumer:
+    restart: always
+    build: ./consumer/.
+    container_name: consumer
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./consumer:/consumer
+    depends_on:
+      - "mysql-consumer"
+  
+  # Services register
+  register:
+    restart: always
+    build: ./register/.
+    container_name: register
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./register:/register
+    depends_on:
+      - "mysql-register"
+
+  # Services mysql consumer
+  mysql-consumer:
+    image: mysql:5.7
+    restart: always
+    container_name: mysql-consumer
+    environment:
+      MYSQL_DATABASE: 'db-consumer'
+      # So you don't have to use root, but you can if you like
+      MYSQL_USER: 'consumer'
+      # You can use whatever password you like
+      MYSQL_PASSWORD: 'password'
+      # Password for root access
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      # <Port exposed> : < MySQL Port running inside container>
+      - '33061:3306'
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
+      # Where our data will be persisted
+    volumes:
+      - ./dbs/consumer:/var/lib/mysql
+  
+  # Services mysql register
+  mysql-register:
+    image: mysql:5.7
+    restart: always
+    container_name: mysql-register
+    environment:
+      MYSQL_DATABASE: 'db-register'
+      # So you don't have to use root, but you can if you like
+      MYSQL_USER: 'register'
+      # You can use whatever password you like
+      MYSQL_PASSWORD: 'password'
+      # Password for root access
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      # <Port exposed> : < MySQL Port running inside container>
+      - '33062:3306'
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
+      # Where our data will be persisted
+    volumes:
+      - ./dbs/register:/var/lib/mysql
